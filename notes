@@ -1,0 +1,199 @@
+┌─────────────────────────┐
+│Global Pokemon Battle MDP│
+└─────────────────────────┘
+
+GPB-MDP = (S, A, Pr, R)
+
+- S = set of all possible states
+- A = set of all possible actions
+- Pr = transition function: S_{t} x S_{t+1} x A_{t} --> [0,1]
+
+
+# IMPORTANT
+GPB-MDP =decomposed=> (B-MDP, P-MDP) where for a given solution to GPB-MDP
+induces solutions on B-MDP, and P-MDP where the solution for B-MDP is the
+piecewise component of GPB-MDP's solution defined for the B-MDP's state space
+and vice-versa. 
+
+The Constraints need to be imposed on GPB-MDP, B-MDP, and T-MDP are intuitive:
+
+GPB-MDP
+- can split state space into two partitions based off the availability of the
+  action space (some actions are not available in certain states). These
+partitions correspond to the MDP's different tasks
+- There exists exit states in each of the partitions of the state space.
+  Defined as states in a partition guranteed to transition to some state in a
+different partition no matter what action is taken.
+- Each task is guranteed to end. Essentially the probabilty of transitioning
+  to a partitions exit state, given any state in the partition is equal to 1
+for some finite time step. Constraining to the intermediary states to be of
+that partition.
+
+B-MDP and T-MDP
+- The reward of transitioning from an exit state to any other state in B-MDP
+  or T-MDP is GPB-MDP's reward for transitioning to the other partition plus
+the sum of all the rewards received during while traversing the partition,
+plus the reward for transitioning back.
+- The reward for transitioning from a non-exit state to any other state is
+  equal to the same transition reward as GPB-MDP
+- The discount factor is equal to GPB-MDP's to the power of the number of
+  steps to exit the neighbor partition
+- The probability of transitioning from an exit state to any other state in
+  B-MDP or T-MDP is equal to GPB-MDP's probability of transitioning to the
+other state from outside the chosen task partition. (transitions that would
+normally pass through another partition have their probabilites modified)
+- The probability of transition from any non-exit state to any other state is
+  the same as GPB-MDP's (transitions between internal states are the same as
+befor)
+
+With These constraints we proved GPB-MDP can be seperated into the B-MDP and
+T-MDP tasks. See note sheet for proof... 
+
+
+
+
+
+# State Space Definition
+
+## Data model
+
+(High Level)
+
+- Team State : P_{i}  *where i=1->6 and P_{i} state of Pokemon in slot i
+- Weather effects :  [0,1]^{5}
+
+### Weather data model
+
+
+
+## Pokemon data model
+
+( High Level )
+
+- Name
+- Slot (1st (active), 2nd, 3rd, 4th, 5th, 6th) ?
+- Gender : [0,1]
+- HP : int
+- Attack : int
+- Defense : int
+- Sp. Attack : int
+- Sp. Defense : int
+- Speed : int
+- Typing : [0,1]^{number of types}
+- Status (Confused, Poisoned, etc.) : [0,1]^{number of status conditions}
+- Ability
+- Item
+- Move 1 : Move data model
+- Move 2 : Move data model
+- Move 3 : Move data model
+- Move 4 : Move data model
+
+### Ability data model
+- bare minimum : [0,1]^{number of abilities}
+
+* though given pokemon I only have 2 options
+
+### Item data model 
+- bare minimum : [0,1]^{number of held items}
+
+### Type data model : [damage multiplier]^{number of types}... ?
+
+### Move data model
+- attack : int
+- accuracy : [0-1]  *it's supposed to be a probability
+- PP : int
+- type : [0,1]^{number of types}
+- category : [0,1]^{3}
+- move priorit : int
+- effect:
+  - can heal HP based off damage dealt, or a certain percentage
+  - raises/lowers user's stats
+  - raises/lowers target's stats
+  - accuracy guarenteed
+  - user must rest next turn 
+  - percentage chance to cause status conditions to target
+                               - sleep
+                               - burn
+                               - paralyzed
+                               - poison
+                               - toxic
+                               - confused
+                               - leech seed
+                               - trapped
+  - percentage chance to cause status conditions to user
+  - if the foes hp is down to half, attack power will double
+  - percentage chance to lower targets stats
+  - percentage chance to lower users stats
+  - percentage chance to critical hit
+  - percentage chance to damange user
+  - attack works only on asleep foe. absorbs %50 damage caused to heal user
+  - power depends on percentage HP left
+  - inflicts damage equal to users level
+  - inflicts a constant amount of damage 
+  - 2 turn attack charge 1st turn attack second
+  - stacks a charge for another attack
+  - attack's power depends on targets HP
+  - attack's power depends on ussers PP left for the move
+  - hits M-N times in a row
+  - power increases depending on if the received damage in the same turn
+    or not
+  - power increases depending on if the target has a certain status conditions
+
+* The amount of effects a move can have does not seem like it can be easily
+  compressed into a data model smaller than the size of:
+sum_over_number_of_effects(data model per effect). The bare minimum data model
+is:  [0,1]^{number of unique moves}, given a flexible enough model, and
+interactions with the environment, this data model contains the bare minimum
+amount of information needed for the model to learn the differences
+between each move. This bare minimum data model might actually be smaller than
+our attempts at compressing this model...
+
+#### Current data model
+- name/effect : [0,1]^{number of moves} * Bare minimum move data model
+- attack : int
+- accuracy : [0-1]
+- PP : int
+- type : [0,1]^{number of types}
+- category : [0,1]^{3}
+- move priority : int
+
+* Although we don't need the other features outside of the bare minimum move
+  data model, we include them still because these are key features that are
+used in IRL battling and contain much of what is important when selecting a
+move to use. We include these features in the hope that it will help speed up
+the learning processes as the Agent attempts to learn a model for what each
+move does.
+
+# Action Space Definition
+
+## Battle States
+
+- actions : [0,1]^{4 (active moves) + 5 (switch slots) + 1 (forfeit)}
+
+## Team Building States
+
+
+# Reward Function Definition
+
+
+
+
+# Graphs
+
+      +--------------+
+      |              | * Pr=1, R=0
+      |              V
+      |       ┌─────────────┐
+   (Battle)<--│Battle States│<---------+
+              └─────────────┘          |
+                     |                 |
+                     V                 |
+               (change team)           | * Pr=1, R=sum(chosen team's wins)?
+                     |                 |
+                     | * Pr=1, R=0?    |
+                     V                 |
+           ┌────────────────────┐      |
+           │Team Building States│-->(Battle)
+           └────────────────────┘
+
+
