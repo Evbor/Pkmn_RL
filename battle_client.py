@@ -87,6 +87,7 @@ class BattleClient:
         assert data['curuser']['loggedin'] and data['assertion'][0:2] != ';;'
 
         assertion = data['assertion']
+        messages = ['/trn {},0,{}'.format(username, assertion)]
         await self.__send_messages('', messages)
 
 
