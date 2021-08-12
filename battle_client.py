@@ -49,7 +49,7 @@ class BattleClient:
 
         raise NotImplementedError
 
-    async def send_messages(self, room, messages):
+    async def __send_messages(self, room, messages):
         """
         Async task used send messages to the Pokemon Showdown server over a
         websocket.
@@ -77,8 +77,8 @@ class BattleClient:
             'challstr': challstr
             }
         r = requests.post('https://play.pokemonshowdown.com/action.php',
-                        data=payload
-            )
+                data=payload
+                )
         # asserting correct response
         assert r.text[0] == ']'
 
@@ -87,7 +87,7 @@ class BattleClient:
         assert data['curuser']['loggedin'] and data['assertion'][0:2] != ';;'
 
         assertion = data['assertion']
-        await __send_messages(room, messages)
+        await self.__send_messages(room, messages)
 
 
     async def __init_real_battle(self, showdown_uri, username, password, team):
@@ -108,7 +108,7 @@ class BattleClient:
         async for message in self.websocket:
             # if message is challstr ==> login given user
             if '|challstr|' == message[0:10]:
-                await __login(username, password, message[10:])
+                await self.__login(username, password, message[10:])
 
     def __init_sim_battle(self, username, team):
         """
