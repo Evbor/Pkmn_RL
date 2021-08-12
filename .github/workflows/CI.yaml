@@ -38,4 +38,4 @@ jobs:
         flake8 . --extend-exclude=pokemon-showdown/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Unit test
       run: |
-        python -m unittest discover
+        python -m unittest discover tests/unit
