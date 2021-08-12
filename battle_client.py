@@ -87,7 +87,7 @@ class BattleClient:
         assert data['curuser']['loggedin'] and data['assertion'][0:2] != ';;'
 
         assertion = data['assertion']
-        await self.__send_messages(room, messages)
+        await self.__send_messages('', messages)
 
 
     async def __init_real_battle(self, showdown_uri, username, password, team):
