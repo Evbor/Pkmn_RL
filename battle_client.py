@@ -3,6 +3,7 @@ import websockets
 import requests
 import json
 
+
 class BattleClient:
     """
     Battle Client Object, binds to a battle, either a simulated one using a
@@ -22,7 +23,7 @@ class BattleClient:
         if showdown_uri and password:
             self.real = True
             self.websocket = None
-            self.loop = asyncio.get_event_loop() # asyncio loop
+            self.loop = asyncio.get_event_loop()
             self.loop.run_until_complete(
                 self.__init_real_battle(showdown_uri, username, password, team)
                 )
@@ -53,14 +54,15 @@ class BattleClient:
         Async task used send messages to the Pokemon Showdown server over a
         websocket.
 
-        :param room {String}: room name of the chat room to send the messages to
+        :param room {String}: room name of the chat room to send the messages
+                              to
         :param messages {List(String)}: list of messages to pass to the
                                         specified room on the server
 
         ---> None
         """
 
-        message = '{}|{}'.format('|'.join(messages))
+        message = '{}|{}'.format(room, '|'.join(messages))
         await self.websocket.send(message)
 
     async def __login(self, username, password, challstr):
@@ -75,7 +77,7 @@ class BattleClient:
             'challstr': challstr
             }
         r = requests.post('https://play.pokemonshowdown.com/action.php',
-            data=payload
+                        data=payload
             )
         # asserting correct response
         assert r.text[0] == ']'
