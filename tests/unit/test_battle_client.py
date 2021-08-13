@@ -1,6 +1,6 @@
 import unittest
 import subprocess
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock, AsyncMock
 from battle_client import BattleClient
 
 class TestBattleClientReal(unittest.IsolatedAsyncioTestCase):
@@ -26,9 +26,16 @@ class TestBattleClientReal(unittest.IsolatedAsyncioTestCase):
                 )
         self.assertTrue(battle.real)
 
-    @patch.object(BattleClient, '_BattleClient__init_real_battle')
-    def test_init_send_messages(self, mock_BattleClient):
-        pass
+    async def patch__init_real_battle(self, showdown_uri, username, password, team):
+        self._BattleClient__websocket = 'patched!'
+
+    @patch.object(BattleClient, '_BattleClient__init_real_battle',
+            new=patch__init_real_battle)
+    def test_init_send_message(self):
+        battle = BattleClient(self.team, self.username, self.showdown_uri,
+                self.password
+                )
+        self.assertEqual(battle._BattleClient__websocket, 'patched!')
 
     def tearDown(self):
         # Destroying BattleClient Config

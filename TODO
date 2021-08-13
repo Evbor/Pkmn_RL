@@ -1,1 +1,4 @@
-
+2) unittest BattleClient __send_messages function
+3) finalize BattleClient __login function
+4) unittest BattleClient __login function
+5) build out start battle portions of BattleClient __init_real_battle function

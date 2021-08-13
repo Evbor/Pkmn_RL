@@ -22,14 +22,14 @@ class BattleClient:
     def __init__(self, team, username, showdown_uri=None, password=None):
         if showdown_uri and password:
             self.real = True
-            self.websocket = None
-            self.loop = asyncio.get_event_loop()
-            self.loop.run_until_complete(
+            self.__websocket = None
+            self.__loop = asyncio.get_event_loop()
+            self.__loop.run_until_complete(
                 self.__init_real_battle(showdown_uri, username, password, team)
                 )
         elif not showdown_uri and not password:
             self.real = False
-            self.battle = self.__init_sim_battle(username, team)
+            self.__battle = self.__init_sim_battle(username, team)
         else:
             raise ValueError('both showdown_url and password must be provided'
                              'or left as None')
@@ -49,21 +49,21 @@ class BattleClient:
 
         raise NotImplementedError
 
-    async def __send_messages(self, room, messages):
+    async def __send_message(self, room, message):
         """
-        Async task used send messages to the Pokemon Showdown server over a
+        Async task used send a messages to the Pokemon Showdown server over a
         websocket.
 
         :param room {String}: room name of the chat room to send the messages
                               to
-        :param messages {List(String)}: list of messages to pass to the
-                                        specified room on the server
+        :param messages {String}: list of messages to pass to the
+                                  specified room on the server
 
         ---> None
         """
 
-        message = '{}|{}'.format(room, '|'.join(messages))
-        await self.websocket.send(message)
+        message_to_send = '{}|{}'.format(room, message)
+        await self.__websocket.send(message_to_send)
 
     async def __login(self, username, password, challstr):
         """
@@ -105,8 +105,8 @@ class BattleClient:
                                                           real battles
         """
 
-        self.websocket = await websockets.connect(showdown_uri)
-        async for message in self.websocket:
+        self.__websocket = await websockets.connect(showdown_uri)
+        async for message in self.__websocket:
             # if message is challstr ==> login given user
             if '|challstr|' == message[0:10]:
                 await self.__login(username, password, message[10:])
