@@ -79,6 +79,7 @@ class BattleClient:
         r = requests.post('https://play.pokemonshowdown.com/action.php',
                 data=payload
                 )
+
         # asserting correct response
         assert r.text[0] == ']'
 
@@ -87,8 +88,8 @@ class BattleClient:
         assert data['curuser']['loggedin'] and data['assertion'][0:2] != ';;'
 
         assertion = data['assertion']
-        messages = ['/trn {},0,{}'.format(username, assertion)]
-        await self.__send_messages('', messages)
+        message = '/trn {},0,{}'.format(username, assertion)
+        await self.__send_message('', message)
 
 
     async def __init_real_battle(self, showdown_uri, username, password, team):
