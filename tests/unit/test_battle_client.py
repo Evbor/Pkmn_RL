@@ -59,21 +59,41 @@ class TestBattleClientReal(unittest.IsolatedAsyncioTestCase):
                 self.password
                 )
         battle._BattleClient__websocket = AsyncMock()
+        # Testing
+        loggedin_tests = [True, False]
+        assertion_tests = ['testassertionstring', ';;erroroccured']
+        json_prefix_tests = [']', '', 'bad_prefix']
 
-        mock_response = {
-            'curuser': {'loggedin': True},
-            'assertion': 'testassertionstring'
-            }
-        mock_resp_string = ']' + json.dumps(mock_response)
-
-        mock_response = MockResponse(mock_resp_string)
-
-        mock_requests_post.return_value = mock_response
-
-        battle._BattleClient__loop.run_until_complete(battle._BattleClient__login(self.username,
-            self.password, 'test challstr')
-            )
-
+        for loggedin in loggedin_tests:
+            for assertion_string in assertion_tests:
+                for json_prefix in json_prefix_tests:
+                    # Buidling mock data and response objects
+                    mock_data = {
+                            'curuser': {'loggedin': loggedin},
+                            'assertion': assertion_string
+                            }
+                    mock_response_string = json_prefix + json.dumps(mock_data)
+                    mock_response = MockResponse(mock_response_string)
+                    with self.subTest(loggedin=loggedin,
+                            assertion_string=assertion_string,
+                            json_prefix=json_prefix):
+                        # Patching posts calls to return constructed mock data
+                        mock_requests_post.return_value = mock_response
+                        # Testing function
+                        if (loggedin and json_prefix == ']' and
+                        assertion_string[0:2] != ';;'):
+                            correct_message = ('|/trn '
+                                '{},0,{}'.format(self.username, assertion_string))
+                            battle._BattleClient__loop.run_until_complete(battle._BattleClient__login(self.username,
+                                self.password, 'test_challstr')
+                                )
+                            battle._BattleClient__websocket.send.assert_called_with(correct_message)
+                            # some tests about correct call
+                        else:
+                            with self.assertRaises(AssertionError):
+                                battle._BattleClient__loop.run_until_complete(battle._BattleClient__login(self.username,
+                                    self.password, 'test_challstr')
+                                    )
 
     def tearDown(self):
         # Destroying BattleClient Config
